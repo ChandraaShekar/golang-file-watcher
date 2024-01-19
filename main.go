@@ -14,17 +14,26 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
 
 var (
 	mu               sync.Mutex
 	fileData         = make(map[string]int64)
-	output_file_name = "fileData.json" // output file name
-	path             = "./tmp"         // path to watch
-	numWorkers       = 5               // number of workers to process file events
+	output_file_name = os.Getenv("OUTPUT_FILE") // output file name
+	path             = os.Getenv("PATH")        // path to watch
+	numWorkers       = os.Getenv("NUM_WORKERS") // number of workers
 )
 
 func saveToFile() {
@@ -88,6 +97,12 @@ func readFromDir(path string) {
 }
 
 func main() {
+
+	numWorkers, err := strconv.Atoi(numWorkers)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
